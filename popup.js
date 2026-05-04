@@ -1,15 +1,18 @@
 const summarizeButton = document.getElementById('summarize-button');
+const highlightButton = document.getElementById('highlight-button');
 const clearButton = document.getElementById('clear-button');
 const loadingSpinner = document.getElementById('loading-spinner');
 const summaryOutput = document.getElementById('summary-output');
 const pageTitle = document.getElementById('page-title');
 const CACHE_PREFIX = 'summary-cache::';
 const LOG_PREFIX = '[Popup]';
+let currentSummaryText = '';
 
 function setLoading(isLoading) {
   loadingSpinner.style.display = isLoading ? 'flex' : 'none';
   summarizeButton.disabled = isLoading;
   clearButton.disabled = isLoading;
+  highlightButton.disabled = isLoading;
 }
 
 function showError(message) {
@@ -23,6 +26,7 @@ function showError(message) {
 
 function renderSummary(summary) {
   console.info(LOG_PREFIX, 'Rendering summary');
+  currentSummaryText = summary;
   summaryOutput.innerHTML = '';
 
   const container = document.createElement('div');
@@ -59,6 +63,7 @@ function renderSummary(summary) {
 
   summaryOutput.appendChild(container);
   clearButton.style.display = 'block';
+  highlightButton.style.display = 'block';
 }
 
 function sendMessage(payload) {
@@ -73,6 +78,27 @@ function sendMessage(payload) {
       }
 
       console.info(LOG_PREFIX, 'Background responded', response?.error ? 'error' : 'success');
+      resolve(response);
+    });
+  });
+}
+
+async function sendTabMessage(payload) {
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tab = tabs[0];
+
+  if (!tab?.id) {
+    throw new Error('No active tab found');
+  }
+
+  return new Promise((resolve, reject) => {
+    chrome.tabs.sendMessage(tab.id, payload, (response) => {
+      const lastError = chrome.runtime.lastError;
+      if (lastError) {
+        reject(new Error(lastError.message));
+        return;
+      }
+
       resolve(response);
     });
   });
@@ -118,6 +144,41 @@ async function getPageData() {
   }
 
   return response;
+}
+
+async function clearPageHighlights() {
+  try {
+    await sendTabMessage({ action: 'clearHighlights' });
+  } catch (error) {
+    console.warn(LOG_PREFIX, 'Unable to clear page highlights', error);
+  }
+}
+
+async function highlightKeySections() {
+  try {
+    if (!currentSummaryText) {
+      throw new Error('No summary available to use for highlighting');
+    }
+
+    console.info(LOG_PREFIX, 'Requesting in-page highlights');
+    highlightButton.disabled = true;
+
+    const response = await sendTabMessage({
+      action: 'highlightPage',
+      summary: currentSummaryText
+    });
+
+    if (response?.error) {
+      throw new Error(response.error);
+    }
+
+    highlightButton.textContent = 'Highlighted on Page';
+  } catch (error) {
+    console.error(LOG_PREFIX, 'Highlighting failed', error);
+    showError(error.message || 'Unable to highlight key sections on the page.');
+  } finally {
+    highlightButton.disabled = false;
+  }
 }
 
 async function summarizePage() {
@@ -169,6 +230,10 @@ async function summarizePage() {
 function clearSummary() {
   summaryOutput.innerHTML = '';
   clearButton.style.display = 'none';
+  highlightButton.style.display = 'none';
+  highlightButton.textContent = 'Highlight Key Sections';
+  currentSummaryText = '';
+  clearPageHighlights();
 }
 
 async function init() {
@@ -183,5 +248,6 @@ async function init() {
 }
 
 summarizeButton.addEventListener('click', summarizePage);
+highlightButton.addEventListener('click', highlightKeySections);
 clearButton.addEventListener('click', clearSummary);
 document.addEventListener('DOMContentLoaded', init);

@@ -48,6 +48,12 @@ ai-page-summarizer/
    - `https://your-service-name.onrender.com/summarize`
 12. Update `background.js` with your Render URL if needed, or store it with the `setProxyUrl` message.
 
+## Popup features
+
+- **Summarize Page** fetches readable content from the current page and generates a structured summary.
+- **Highlight Key Sections** uses the generated summary to highlight likely relevant paragraphs on the page.
+- **Clear Summary** removes the popup summary and clears any page highlights.
+
 ## Local extension setup
 
 1. Open Chrome and go to `chrome://extensions`.
@@ -75,6 +81,10 @@ ai-page-summarizer/
 - It introduces a small network dependency because summaries are fetched through Render.
 - If the Render endpoint is down, summarization will fail gracefully.
 
-## Next step after deployment
+## Submission checklist
 
-Once Render gives you the final URL, I can help you connect the popup flow end-to-end and test the summarizer request.
+- Confirm the Render service is deployed and responding.
+- Load the extension unpacked in Chrome.
+- Test summarize, cache reuse, and optional highlighting on a few article pages.
+- Record the short demo video requested in the brief.
+- Submit the GitHub repo and README with the final Render URL.

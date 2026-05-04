@@ -112,6 +112,16 @@ header {
     outline-offset: 2px;
 }
 
+.secondary-button {
+    background: var(--surface-2);
+    color: var(--primary-text);
+    border: 1px solid var(--border-color);
+}
+
+.secondary-button:hover {
+    background: var(--border-color);
+}
+
 .clear-button {
     background: var(--surface-2);
     color: var(--primary-text);
