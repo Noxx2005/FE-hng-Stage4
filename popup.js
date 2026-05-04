@@ -3,6 +3,7 @@ const clearButton = document.getElementById('clear-button');
 const loadingSpinner = document.getElementById('loading-spinner');
 const summaryOutput = document.getElementById('summary-output');
 const pageTitle = document.getElementById('page-title');
+const CACHE_PREFIX = 'summary-cache::';
 
 function setLoading(isLoading) {
   loadingSpinner.style.display = isLoading ? 'flex' : 'none';
@@ -70,6 +71,15 @@ function sendMessage(payload) {
   });
 }
 
+async function getCachedSummary(url) {
+  if (!url) {
+    return null;
+  }
+
+  const stored = await chrome.storage.local.get([`${CACHE_PREFIX}${url}`]);
+  return stored[`${CACHE_PREFIX}${url}`] || null;
+}
+
 async function getPageData() {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
   const tab = tabs[0];
@@ -106,6 +116,12 @@ async function summarizePage() {
 
     if (!pageData.text) {
       throw new Error('No readable content found on this page');
+    }
+
+    const cachedSummary = await getCachedSummary(pageData.url);
+    if (cachedSummary) {
+      renderSummary(cachedSummary);
+      return;
     }
 
     const response = await sendMessage({

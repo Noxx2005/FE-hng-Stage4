@@ -1,4 +1,4 @@
-const DEFAULT_PROXY_URL = "https://YOUR-RENDER-SERVICE.onrender.com/summarize";
+const DEFAULT_PROXY_URL = "https://fe-hng-stage4.onrender.com/summarize";
 const CACHE_PREFIX = "summary-cache::";
 
 async function getProxyUrl() {
