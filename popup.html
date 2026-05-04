@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Page Summarizer</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <span class="header-icon">&#128209;</span>
+                <h1 class="header-title">AI Summarizer</h1>
+            </div>
+            <p class="page-title" id="page-title">Current Page</p>
+        </header>
+        <main>
+            <button id="summarize-button" class="button">Summarize Page</button>
+            <div id="loading-spinner" class="spinner-container" style="display: none;">
+                <div class="spinner"></div>
+            </div>
+            <div id="summary-output" class="summary-container"></div>
+        </main>
+        <footer>
+            <button id="clear-button" class="button clear-button" style="display: none;">Clear Summary</button>
+        </footer>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>
