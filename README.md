@@ -38,13 +38,15 @@ ai-page-summarizer/
 6. Add the environment variable:
    - `GEMINI_API_KEY` = your Gemini API key
 7. Optional: add the environment variable:
-   - `GEMINI_MODEL` = `gemini-2.0-flash`
-8. Deploy the service.
-9. Render will give you a URL like:
+   - `GEMINI_MODEL` = `gemini-3.1-flash-lite-preview`
+8. Optional: add the environment variable:
+   - `GEMINI_API_VERSION` = `v1beta`
+9. Deploy the service.
+10. Render will give you a URL like:
    - `https://your-service-name.onrender.com`
-10. Your summarize endpoint will be:
+11. Your summarize endpoint will be:
    - `https://your-service-name.onrender.com/summarize`
-11. Update `background.js` with your Render URL if needed, or store it with the `setProxyUrl` message.
+12. Update `background.js` with your Render URL if needed, or store it with the `setProxyUrl` message.
 
 ## Local extension setup
 

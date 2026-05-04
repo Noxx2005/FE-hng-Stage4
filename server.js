@@ -3,8 +3,9 @@ const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent`;
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite-preview';
+const GEMINI_API_VERSION = process.env.GEMINI_API_VERSION || 'v1beta';
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/${GEMINI_API_VERSION}/models/${GEMINI_MODEL}:generateContent`;
 const MAX_INPUT_LENGTH = 20000;
 const LOG_PREFIX = '[Server]';
 
@@ -28,6 +29,7 @@ app.post('/summarize', async (req, res) => {
 
   console.info(LOG_PREFIX, 'Summarize request received', {
     model: GEMINI_MODEL,
+    apiVersion: GEMINI_API_VERSION,
     hasApiKey: Boolean(apiKey),
     textLength: typeof req.body?.text === 'string' ? req.body.text.length : 0
   });
@@ -58,6 +60,7 @@ app.post('/summarize', async (req, res) => {
   try {
     console.info(LOG_PREFIX, 'Calling Gemini API', {
       endpoint: GEMINI_API_URL,
+      apiVersion: GEMINI_API_VERSION,
       truncatedTextLength: truncatedText.length
     });
 
