@@ -1,4 +1,5 @@
 const ROOT_SELECTORS = ['article', 'main', '[role="main"]', 'body'];
+const LOG_PREFIX = '[Content]';
 
 const NOISE_SELECTORS = [
   'script',
@@ -102,9 +103,11 @@ function getCandidateRoots() {
     .filter(Boolean);
 
   if (primaryRoots.length > 0) {
+    console.info(LOG_PREFIX, 'Using primary content roots', primaryRoots.map((node) => node.tagName.toLowerCase()));
     return primaryRoots;
   }
 
+  console.warn(LOG_PREFIX, 'No article/main/role=main found, falling back to body');
   return [document.body];
 }
 
@@ -113,28 +116,40 @@ function pickBestReadableText() {
 
   for (const root of candidates) {
     const text = getReadableText(root);
+    console.info(LOG_PREFIX, 'Candidate text length', root.tagName.toLowerCase(), text.length);
     if (text.length >= 200) {
       return text;
     }
   }
 
   const fallbackText = getReadableText(document.body);
+  console.info(LOG_PREFIX, 'Fallback body text length', fallbackText.length);
   return fallbackText.length > 0 ? fallbackText : '';
 }
 
 function extractPageContent() {
-  return {
+  const content = {
     title: document.title || 'Untitled Page',
     text: pickBestReadableText(),
     url: window.location.href
   };
+
+  console.info(LOG_PREFIX, 'Extracted page content', {
+    title: content.title,
+    url: content.url,
+    textLength: content.text.length
+  });
+
+  return content;
 }
 
 chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   if (request?.action === 'getPageContent') {
+    console.info(LOG_PREFIX, 'Received getPageContent request');
     sendResponse({ ok: true, ...extractPageContent() });
     return true;
   }
 
+  console.warn(LOG_PREFIX, 'Unknown message received', request?.action);
   return false;
 });

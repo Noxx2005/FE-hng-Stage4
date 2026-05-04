@@ -4,6 +4,7 @@ const loadingSpinner = document.getElementById('loading-spinner');
 const summaryOutput = document.getElementById('summary-output');
 const pageTitle = document.getElementById('page-title');
 const CACHE_PREFIX = 'summary-cache::';
+const LOG_PREFIX = '[Popup]';
 
 function setLoading(isLoading) {
   loadingSpinner.style.display = isLoading ? 'flex' : 'none';
@@ -12,6 +13,7 @@ function setLoading(isLoading) {
 }
 
 function showError(message) {
+  console.error(LOG_PREFIX, message);
   summaryOutput.innerHTML = '';
   const error = document.createElement('div');
   error.className = 'error-message';
@@ -20,6 +22,7 @@ function showError(message) {
 }
 
 function renderSummary(summary) {
+  console.info(LOG_PREFIX, 'Rendering summary');
   summaryOutput.innerHTML = '';
 
   const container = document.createElement('div');
@@ -60,12 +63,16 @@ function renderSummary(summary) {
 
 function sendMessage(payload) {
   return new Promise((resolve, reject) => {
+    console.info(LOG_PREFIX, 'Sending message to background', payload.action);
     chrome.runtime.sendMessage(payload, (response) => {
       const lastError = chrome.runtime.lastError;
       if (lastError) {
+        console.error(LOG_PREFIX, 'Message failed', lastError.message);
         reject(new Error(lastError.message));
         return;
       }
+
+      console.info(LOG_PREFIX, 'Background responded', response?.error ? 'error' : 'success');
       resolve(response);
     });
   });
@@ -77,10 +84,14 @@ async function getCachedSummary(url) {
   }
 
   const stored = await chrome.storage.local.get([`${CACHE_PREFIX}${url}`]);
-  return stored[`${CACHE_PREFIX}${url}`] || null;
+  const cachedSummary = stored[`${CACHE_PREFIX}${url}`] || null;
+
+  console.info(LOG_PREFIX, cachedSummary ? 'Cache hit' : 'Cache miss', url);
+  return cachedSummary;
 }
 
 async function getPageData() {
+  console.info(LOG_PREFIX, 'Requesting page content from content script');
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
   const tab = tabs[0];
 
@@ -92,9 +103,12 @@ async function getPageData() {
     chrome.tabs.sendMessage(tab.id, { action: 'getPageContent' }, (result) => {
       const lastError = chrome.runtime.lastError;
       if (lastError) {
+        console.error(LOG_PREFIX, 'Failed to read page content', lastError.message);
         reject(new Error(lastError.message));
         return;
       }
+
+      console.info(LOG_PREFIX, 'Received page content response');
       resolve(result);
     });
   });
@@ -108,11 +122,17 @@ async function getPageData() {
 
 async function summarizePage() {
   try {
+    console.info(LOG_PREFIX, 'Summarize button clicked');
     setLoading(true);
     summaryOutput.innerHTML = '';
 
     const pageData = await getPageData();
     pageTitle.textContent = pageData.title || 'Current Page';
+    console.info(LOG_PREFIX, 'Page data ready', {
+      title: pageData.title,
+      url: pageData.url,
+      textLength: pageData.text?.length || 0
+    });
 
     if (!pageData.text) {
       throw new Error('No readable content found on this page');
@@ -120,10 +140,12 @@ async function summarizePage() {
 
     const cachedSummary = await getCachedSummary(pageData.url);
     if (cachedSummary) {
+      console.info(LOG_PREFIX, 'Using cached summary');
       renderSummary(cachedSummary);
       return;
     }
 
+    console.info(LOG_PREFIX, 'No cache found, requesting fresh summary');
     const response = await sendMessage({
       action: 'summarize',
       text: pageData.text,
@@ -137,6 +159,7 @@ async function summarizePage() {
 
     renderSummary(response.summary || 'No summary returned.');
   } catch (error) {
+    console.error(LOG_PREFIX, 'Summarize failed', error);
     showError(error.message || 'Something went wrong while summarizing the page.');
   } finally {
     setLoading(false);
@@ -150,9 +173,11 @@ function clearSummary() {
 
 async function init() {
   try {
+    console.info(LOG_PREFIX, 'Popup initialized');
     const pageData = await getPageData();
     pageTitle.textContent = pageData.title || 'Current Page';
   } catch {
+    console.warn(LOG_PREFIX, 'Could not load initial page title');
     pageTitle.textContent = 'Current Page';
   }
 }
