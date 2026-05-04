@@ -259,8 +259,14 @@ function highlightKeySections(summary) {
 
 chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   if (request?.action === 'getPageContent') {
-    console.info(LOG_PREFIX, 'Received getPageContent request');
-    sendResponse({ ok: true, ...extractPageContent() });
+    try {
+      console.info(LOG_PREFIX, 'Received getPageContent request');
+      sendResponse({ ok: true, ...extractPageContent() });
+    } catch (error) {
+      console.error(LOG_PREFIX, 'Failed to extract page content', error);
+      sendResponse({ error: error.message || 'Unable to read page content' });
+    }
+
     return true;
   }
 

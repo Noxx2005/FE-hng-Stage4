@@ -18,14 +18,14 @@ ai-page-summarizer/
 └── README.md
 ```
 
-## How the Render setup works
+## Architecture explanation
 
 - The Chrome Extension **does not call Gemini directly**.
 - `background.js` sends extracted text to your **Render web service**.
 - The Render server reads `GEMINI_API_KEY` from **Render Environment Variables**.
 - Gemini returns the summary to Render, and Render returns it to the extension.
 
-## What you need to do on Render
+## Setup instructions
 
 1. Push this repo to GitHub.
 2. Go to **Render** and sign in.
@@ -54,6 +54,14 @@ ai-page-summarizer/
 - **Highlight Key Sections** uses the generated summary to highlight likely relevant paragraphs on the page.
 - **Clear Summary** removes the popup summary and clears any page highlights.
 
+## AI integration explanation
+
+- The popup asks the content script for readable page content.
+- The content script extracts the main article text and removes common clutter.
+- The popup sends the extracted text to the background service worker.
+- The background worker forwards the request to the Render proxy.
+- The Render server calls Gemini and returns the structured summary.
+
 ## Local extension setup
 
 1. Open Chrome and go to `chrome://extensions`.
@@ -62,18 +70,12 @@ ai-page-summarizer/
 4. Select this project folder.
 5. Open any article page and click the extension icon.
 
-## Deployment notes
+## Security decisions
 
 - **Do not commit any `.env` file**.
 - **Do not place your API key in the extension files**.
 - Keep the key only in **Render Environment Variables**.
 - If you change your Render service URL, update `background.js`.
-
-## Security decisions
-
-- API key stays on Render, not in the browser.
-- The extension sends only the page text to your proxy.
-- The proxy validates input and returns only the summary.
 
 ## Trade-offs
 
