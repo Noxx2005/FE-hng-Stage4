@@ -1,6 +1,6 @@
 # AI Page Summarizer Chrome Extension
 
-A Manifest V3 Chrome Extension that extracts readable webpage content, sends it to a secure Netlify Function, and returns an AI-generated summary.
+A Manifest V3 Chrome Extension that extracts readable webpage content, sends it to a secure Render backend, and returns an AI-generated summary.
 
 ## Project Structure
 
@@ -12,35 +12,37 @@ ai-page-summarizer/
 ├── popup.html
 ├── popup.js
 ├── popup.css
-├── netlify.toml
-├── netlify/
-│   └── functions/
-│       └── summarize.js
+├── package.json
+├── server.js
+├── render.yaml
 └── README.md
 ```
 
-## How the Netlify setup works
+## How the Render setup works
 
 - The Chrome Extension **does not call Gemini directly**.
-- `background.js` sends extracted text to a **Netlify Function**.
-- The Netlify Function reads `GEMINI_API_KEY` from **Netlify Environment Variables**.
-- Gemini returns the summary to Netlify, and Netlify returns it to the extension.
+- `background.js` sends extracted text to your **Render web service**.
+- The Render server reads `GEMINI_API_KEY` from **Render Environment Variables**.
+- Gemini returns the summary to Render, and Render returns it to the extension.
 
-## What you need to do on Netlify
+## What you need to do on Render
 
 1. Push this repo to GitHub.
-2. Go to **Netlify** and sign in.
-3. Click **Add new site** → **Import an existing project**.
+2. Go to **Render** and sign in.
+3. Click **New +** → **Web Service**.
 4. Connect your GitHub repo.
-5. Deploy the site.
-6. After deployment, go to **Site settings** → **Environment variables**.
-7. Add:
+5. Use these settings:
+   - **Environment**: `Node`
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+6. Add the environment variable:
    - `GEMINI_API_KEY` = your Gemini API key
-8. Save the variable.
-9. Netlify will give you a site URL like:
-   - `https://your-site-name.netlify.app`
-10. Copy that URL and update `background.js`:
-   - `https://YOUR-SITE-NAME.netlify.app/.netlify/functions/summarize`
+7. Deploy the service.
+8. Render will give you a URL like:
+   - `https://your-service-name.onrender.com`
+9. Your summarize endpoint will be:
+   - `https://your-service-name.onrender.com/summarize`
+10. Update `background.js` with your Render URL if needed, or store it with the `setProxyUrl` message.
 
 ## Local extension setup
 
@@ -54,21 +56,21 @@ ai-page-summarizer/
 
 - **Do not commit any `.env` file**.
 - **Do not place your API key in the extension files**.
-- Keep the key only in **Netlify Environment Variables**.
-- If you change your Netlify site URL, update `background.js`.
+- Keep the key only in **Render Environment Variables**.
+- If you change your Render service URL, update `background.js`.
 
 ## Security decisions
 
-- API key stays on Netlify, not in the browser.
+- API key stays on Render, not in the browser.
 - The extension sends only the page text to your proxy.
 - The proxy validates input and returns only the summary.
 
 ## Trade-offs
 
 - This approach is more secure than hardcoding the API key in the extension.
-- It introduces a small network dependency because summaries are fetched through Netlify.
-- If the Netlify endpoint is down, summarization will fail gracefully.
+- It introduces a small network dependency because summaries are fetched through Render.
+- If the Render endpoint is down, summarization will fail gracefully.
 
 ## Next step after deployment
 
-Once Netlify gives you the final URL, I can help you connect the popup flow end-to-end and test the summarizer request.
+Once Render gives you the final URL, I can help you connect the popup flow end-to-end and test the summarizer request.

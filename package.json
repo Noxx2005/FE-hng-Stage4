@@ -1,0 +1,17 @@
+{
+  "name": "ai-page-summarizer-proxy",
+  "version": "1.0.0",
+  "description": "Render backend proxy for the AI Page Summarizer Chrome Extension",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}
